@@ -9,11 +9,15 @@ import fr.xephi.authme.datasource.MariaDB;
 import fr.xephi.authme.datasource.MySQL;
 import fr.xephi.authme.datasource.PostgreSqlDataSource;
 import fr.xephi.authme.datasource.SQLite;
+import fr.xephi.authme.datasource.hashing.HashedIdentityDataSource;
+import fr.xephi.authme.datasource.hashing.IdentityHasher;
+import fr.xephi.authme.datasource.hashing.PlayerIdentityRegistry;
 import fr.xephi.authme.datasource.mysqlextensions.MySqlExtensionsFactory;
 import fr.xephi.authme.output.ConsoleLoggerFactory;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.settings.Settings;
 import fr.xephi.authme.settings.properties.DatabaseSettings;
+import fr.xephi.authme.settings.properties.HooksSettings;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -40,6 +44,8 @@ public class DataSourceProvider implements Provider<DataSource> {
     private PlayerCache playerCache;
     @Inject
     private MySqlExtensionsFactory mySqlExtensionsFactory;
+    @Inject
+    private PlayerIdentityRegistry identityRegistry;
 
     DataSourceProvider() {
     }
@@ -80,6 +86,17 @@ public class DataSourceProvider implements Provider<DataSource> {
                 throw new UnsupportedOperationException("Unknown data source type '" + dataSourceType + "'");
         }
 
+        String uuidSalt = ensureUuidSalt();
+        if (settings.getProperty(DatabaseSettings.HASHED_IDENTITY_ENABLED)) {
+            if (!settings.getProperty(HooksSettings.MYSQL_OTHER_USERNAME_COLS).isEmpty()) {
+                logger.warning("hashedIdentity is enabled: mySQLOtherUsernameColumns will receive hashes!");
+            }
+            HashedIdentityDataSource hashed =
+                new HashedIdentityDataSource(dataSource, new IdentityHasher(uuidSalt), identityRegistry);
+            hashed.migratePlainAccounts();
+            dataSource = hashed;
+        }
+
         if (settings.getProperty(DatabaseSettings.USE_CACHING)) {
             dataSource = new CacheDataSource(dataSource, playerCache);
         }
@@ -87,6 +104,17 @@ public class DataSourceProvider implements Provider<DataSource> {
             checkDataSourceSize(dataSource);
         }
         return dataSource;
+    }
+
+    private String ensureUuidSalt() {
+        String salt = settings.getProperty(DatabaseSettings.HASHED_IDENTITY_UUID_SALT);
+        if (!IdentityHasher.isValidUuidSalt(salt)) {
+            salt = IdentityHasher.generateSalt();
+            settings.setProperty(DatabaseSettings.HASHED_IDENTITY_UUID_SALT, salt);
+            settings.save();
+            logger.info("Generated a new UUID salt in the config (DataSource.hashedIdentity.uuidSalt)");
+        }
+        return salt.trim();
     }
 
     private void checkDataSourceSize(DataSource dataSource) {
