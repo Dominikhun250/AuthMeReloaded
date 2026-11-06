@@ -143,6 +143,23 @@ public final class DatabaseSettings implements SettingsHolder {
     public static final Property<String> MYSQL_COL_PREMIUM_UUID =
         newProperty("DataSource.mySQLColumnPremiumUUID", "premiumUUID");
 
+    @Comment({"Hashed identities: store the UUID and name of players only as salted hashes.",
+        "- The UUID is hashed with ONE fixed salt (uuidSalt below). The result is the",
+        "  lookup key, so an account is found instantly with an indexed query.",
+        "- The username and real name get their own random salt per account and are",
+        "  only compared after the row was found through the UUID hash.",
+        "WARNING: this is one-way! Make a backup first. Existing accounts are",
+        "converted on the next start. Not compatible with the board/forum MySQL",
+        "extensions or mySQLOtherUsernameColumns."})
+    public static final Property<Boolean> HASHED_IDENTITY_ENABLED =
+        newProperty("DataSource.hashedIdentity.enabled", true);
+
+    @Comment({"Fixed salt used for hashing the UUIDs, generated automatically if missing.",
+        "NEVER change or delete it while hashedIdentity is enabled:",
+        "all accounts would become unreachable!"})
+    public static final Property<String> HASHED_IDENTITY_UUID_SALT =
+        newProperty("DataSource.hashedIdentity.uuidSalt", "");
+
     @Comment("Column for storing players groups")
     public static final Property<String> MYSQL_COL_GROUP =
         newProperty("ExternalBoardOptions.mySQLColumnGroup", "");
