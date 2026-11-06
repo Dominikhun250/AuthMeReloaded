@@ -67,7 +67,7 @@
         <!-- Environment properties -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <revision>6.0.2-SNAPSHOT</revision>
+        <revision>6.0.3-SNAPSHOT</revision>
         <module.java.version>17</module.java.version>
         <maven.minimumVersion>3.8.8</maven.minimumVersion>
 
@@ -81,7 +81,7 @@
         <pluginDescription.name>${project.outputName}</pluginDescription.name>
         <pluginDescription.version>${project.versionCode}</pluginDescription.version>
         <pluginDescription.main>fr.xephi.authme.AuthMe</pluginDescription.main>
-        <pluginDescription.authors>sgdc3, games647, Hex3l, krusic22</pluginDescription.authors>
+        <pluginDescription.authors>sgdc3, games647, Hex3l, krusic22, Dominikhun250</pluginDescription.authors>
 
         <!-- Java libraries -->
         <dependencies.injector.version>1.0</dependencies.injector.version>
