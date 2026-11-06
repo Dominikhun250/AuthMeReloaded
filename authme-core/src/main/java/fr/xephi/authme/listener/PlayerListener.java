@@ -6,6 +6,7 @@ import fr.xephi.authme.data.auth.PlayerCache;
 import fr.xephi.authme.data.limbo.EnderPearlRestoreData;
 import fr.xephi.authme.data.limbo.LimboService;
 import fr.xephi.authme.datasource.DataSource;
+import fr.xephi.authme.datasource.hashing.PlayerIdentityRegistry;
 import fr.xephi.authme.message.MessageKey;
 import fr.xephi.authme.message.Messages;
 import fr.xephi.authme.permission.PermissionsManager;
@@ -83,6 +84,8 @@ public class PlayerListener implements Listener {
     @Inject
     private DataSource dataSource;
     @Inject
+    private PlayerIdentityRegistry identityRegistry;
+    @Inject
     private Management management;
     @Inject
     private BukkitService bukkitService;
@@ -118,6 +121,7 @@ public class PlayerListener implements Listener {
             return;
         }
         final String name = event.getName();
+        identityRegistry.remember(name, event.getUniqueId());
 
         // NOTE: getAddress() sometimes returning null, we don't want to handle this race condition
         if (event.getAddress() == null) {
@@ -125,6 +129,7 @@ public class PlayerListener implements Listener {
                 messages.retrieveSingle(name, MessageKey.KICK_UNRESOLVED_HOSTNAME));
             return;
         }
+        identityRegistry.rememberIp(name, event.getAddress().getHostAddress());
 
         if (validationService.isUnrestricted(name)) {
             return;
